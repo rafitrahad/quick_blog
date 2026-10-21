@@ -42,6 +42,11 @@ class Post extends Model
         return $this->hasMany(Comment::class)->latest();
     }
 
+    public function rootComments(): HasMany
+    {
+        return $this->hasMany(Comment::class)->whereNull('parent_id')->latest();
+    }
+
 
     // Relationship to User
     public function author()

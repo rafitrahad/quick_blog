@@ -6,7 +6,7 @@
         <div class="card shadow-sm border-0 p-4">
             <h2 class="h4 text-center fw-bold mb-4">Welcome Back</h2>
 
-            <form action="{{ route('login') }}" method="POST">
+            <form action="{{ route('login.authenticate') }}" method="POST">
                 @csrf
 
                 <!-- Email -->
@@ -47,14 +47,14 @@
                         <input class="form-check-input" type="checkbox" name="remember" id="remember">
                         <label class="form-check-label small" for="remember">Remember me</label>
                     </div>
-                    <a href="{{ route('forgotPasswordView') }}" class="small text-decoration-none">Forgot password?</a>
+                    <a href="{{ route('password.request') }}" class="small text-decoration-none">Forgot password?</a>
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">Log In</button>
             </form>
 
             <div class="text-center mt-3">
-                <small class="text-muted">Don't have an account? <a href="{{ route('signupView') }}" class="text-decoration-none">Sign Up</a></small>
+                <small class="text-muted">Don't have an account? <a href="{{ route('register') }}" class="text-decoration-none">Sign Up</a></small>
             </div>
         </div>
     </div>

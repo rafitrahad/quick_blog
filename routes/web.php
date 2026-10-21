@@ -1,42 +1,42 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\userController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\AdminController;
 
+// 1. Public Feed & Show Post
+Route::get('/', [PostController::class, 'index'])->name('home');
+Route::get('/posts/{post:slug}', [PostController::class, 'show'])->name('posts.show');
 
-// 1. Home / Feed
-Route::get('/', [userController::class, 'index'])->name('index');
+// 2. Authentication (Guests Only)
+Route::middleware('guest')->group(function () {
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [AuthController::class, 'register'])->name('register.store');
 
-// 2. Authentication: Sign Up
-Route::get('/signupView', [userController::class, 'signupView'])->name('signupView');
-Route::post('signup', [userController::class, 'signup'])->name('signup');
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.authenticate');
 
-// 3. Authentication: Log In
-Route::get('/loginView', [userController::class, 'loginView'])->name('loginView');
-Route::post('/login', [userController::class, 'login'])->name('login');
-
-//logout
-Route::post('/logout', [userController::class, 'logout'])->name('logout');
-
-// 4. Password Reset
-Route::get('/forgot-passwordView', [userController::class, 'forgotPasswordView'])->name('forgotPasswordView');
-Route::post('/forgot-password', [userController::class, 'forgotPassword'])->name('forgotPassword');
-
-// 5. Admin Dashboard
-Route::get('/admin/dashboard', [userController::class, 'adminDashboard'])->name('admin.dashboard');
-
-
-Route::middleware('auth')->group(function () {
-    Route::get('/post/create', [PostController::class, 'create'])->name('post.create');
-    Route::post('/post', [PostController::class, 'store'])->name('post.store');
-    Route::post('/logout', [userController::class, 'logout'])->name('logout');
+    Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
+    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
 });
 
-Route::get('/', [PostController::class, 'index'])->name('index');
-Route::get('/posts/{post:slug}', [PostController::class, 'show'])->name('post.show');
+// 3. Authenticated Actions (All logged-in users)
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::post('/posts/{post}/comments', [CommentController::class, 'store'])->name('comments.store');
+    Route::put('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
+    Route::post('/comments/{comment}/hide', [CommentController::class, 'hide'])->name('comments.hide');
+});
 
-Route::post('/posts/{post}/comments', [CommentController::class, 'store'])
-    ->middleware('auth')
-    ->name('comments.store');
+// 4. Admin Only
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');
+    Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+    Route::get('/posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
+    Route::put('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
+    Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+});

@@ -6,7 +6,7 @@
         <div class="card shadow-sm border-0 p-4">
             <h2 class="h4 text-center fw-bold mb-4">Create an Account</h2>
 
-            <form action="{{ route('signup') }}" method="POST">
+            <form action="{{ route('register.store') }}" method="POST">
                 @csrf
 
                 <!-- Name -->
@@ -72,7 +72,7 @@
             </form>
 
             <div class="text-center mt-3">
-                <small class="text-muted">Already have an account? <a href="{{ route('loginView') }}" class="text-decoration-none">Log In</a></small>
+                <small class="text-muted">Already have an account? <a href="{{ route('login') }}">Log In</a></small>
             </div>
         </div>
     </div>

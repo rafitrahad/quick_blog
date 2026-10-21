@@ -7,7 +7,7 @@
             <h2 class="h4 text-center fw-bold mb-2">Reset Password</h2>
             <p class="text-center text-muted small mb-4">Enter your registered email address and we'll send you a password reset link.</p>
 
-            <form action= method="POST">
+            <form action="{{ route('password.email') }}" method="POST">
                 @csrf
 
                 <!-- Email -->
@@ -30,7 +30,7 @@
             </form>
 
             <div class="text-center mt-3">
-                <a href="{{ route('loginView') }}" class="small text-decoration-none">&larr; Back to Log In</a>
+                <a href="{{ route('login') }}" class="small text-decoration-none">&larr; Back to Log In</a>
             </div>
         </div>
     </div>
