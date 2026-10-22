@@ -15,7 +15,7 @@ class PostController extends Controller
         $query = Post::where('status', 'published')
             ->with([
                 'author',
-                'comments' => fn ($q) => $q->whereNull('parent_id')->with(['user', 'replies.user'])->latest(),
+                'comments' => fn($q) => $q->whereNull('parent_id')->with(['user', 'replies.user'])->latest(),
             ])
             ->withCount('comments')
             ->latest();
@@ -29,29 +29,49 @@ class PostController extends Controller
 
         $posts = $query->paginate(6)->withQueryString();
 
-        return view('index', compact('posts'));
+        // Trending / Most Viewed posts for sidebar (Top 5 most trending)
+        $trendingPosts = Post::where('status', 'published')
+            ->orderByDesc('views')
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return view('index', compact('posts', 'trendingPosts'));
     }
 
     public function show($post)
     {
-        $postModel = $post instanceof Post 
+        $postModel = $post instanceof Post
             ? $post->load([
                 'author',
-                'comments' => fn ($q) => $q->whereNull('parent_id')->with(['user', 'replies.user'])->latest(),
+                'comments' => fn($q) => $q->whereNull('parent_id')->with(['user', 'replies.user'])->latest(),
             ])->loadCount('comments')
             : Post::with([
                 'author',
-                'comments' => fn ($q) => $q->whereNull('parent_id')->with(['user', 'replies.user'])->latest(),
+                'comments' => fn($q) => $q->whereNull('parent_id')->with(['user', 'replies.user'])->latest(),
             ])
-                ->withCount('comments')
-                ->where('slug', $post)
-                ->orWhere('id', $post)
-                ->firstOrFail();
+            ->withCount('comments')
+            ->where(function ($q) use ($post) {
+                $q->where('slug', $post);
+                if (is_numeric($post)) {
+                    $q->orWhere('id', $post);
+                }
+            })
+            ->firstOrFail();
 
         // If the post is a draft, only logged-in admins can view it
         if ($postModel->status === 'draft') {
-            if (!Auth::check() || !Auth::user()->isAdmin()) {
+            /** @var \App\Models\User|null $user */
+            $user = Auth::user();
+            if (!$user || !$user->isAdmin()) {
                 abort(404);
+            }
+        } else {
+            // Increment view count for published posts (counted once per user session)
+            $viewedKey = 'viewed_post_' . $postModel->id;
+            if (!session()->has($viewedKey)) {
+                $postModel->increment('views');
+                session()->put($viewedKey, true);
             }
         }
 
@@ -72,7 +92,7 @@ class PostController extends Controller
             'quote'       => ['nullable', 'string', 'max:500'],
             'category'    => ['required', 'string', 'max:100'],
             'tags'        => ['nullable', 'string'],
-            'media'       => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,mp4,mov,avi', 'max:20480'],
+            'media'       => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,mp4,mov,avi', 'max:90480'],
             'status'      => ['required', 'in:draft,published'],
         ]);
 
@@ -104,9 +124,12 @@ class PostController extends Controller
             $counter++;
         }
 
+        /** @var \App\Models\User|null $currentUser */
+        $currentUser = Auth::user();
+
         Post::create([
             'user_id'      => Auth::id(),
-            'author_name'  => Auth::user()->name,
+            'author_name'  => $currentUser ? $currentUser->name : 'Admin',
             'title'        => $validated['title'],
             'slug'         => $slug,
             'description'  => $validated['description'],
@@ -137,7 +160,7 @@ class PostController extends Controller
             'quote'       => ['nullable', 'string', 'max:500'],
             'category'    => ['required', 'string', 'max:100'],
             'tags'        => ['nullable', 'string'],
-            'media'       => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,mp4,mov,avi', 'max:20480'],
+            'media'       => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,mp4,mov,avi', 'max:90480'],
             'status'      => ['required', 'in:draft,published'],
         ]);
 

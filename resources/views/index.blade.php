@@ -1,22 +1,39 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container py-2" style="max-width: 800px;">
-    <!-- Page Header & Search -->
-    <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
-        <h1 class="h3 fw-bold mb-0">Latest Articles</h1>
-        
-        <form action="{{ route('home') }}" method="GET" class="d-flex gap-2">
-            <input 
-                type="text" 
-                name="search" 
-                value="{{ request('search') }}" 
-                placeholder="Search articles..." 
-                class="form-control form-control-sm"
-            >
-            <button type="submit" class="btn btn-dark btn-sm">Search</button>
-        </form>
+<div class="row g-4 justify-content-center">
+    <!-- Left Column: Billboard for Ads -->
+    <div class="col-12 col-lg-3 col-xl-3 d-none d-lg-block" style="max-width: 320px;">
+        <div class="sidebar-reactive-scroll" style="position: sticky; top: 76px; max-height: calc(100vh - 90px); overflow-y: auto; overscroll-behavior: contain;">
+            <div class="card border-0 shadow-sm text-center p-4 bg-white" style="border-radius: 12px; border: 2px dashed #cbd5e1 !important;">
+                <div class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle mx-auto mb-3" style="width: 56px; height: 56px;">
+                    <i class="bi bi-badge-ad text-muted fs-3"></i>
+                </div>
+                <h6 class="fw-bold text-dark mb-1">Billboard for Ads</h6>
+                <p class="text-muted small mb-0">
+                    Space reserved for advertisements.
+                </p>
+            </div>
+        </div>
     </div>
+
+    <!-- Main Column: Articles Feed -->
+    <div class="col-12 col-lg-6 col-xl-6 flex-grow-1" style="max-width: 800px;">
+        <!-- Page Header & Search -->
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+            <h1 class="h3 fw-bold mb-0">Latest Articles</h1>
+            
+            <form action="{{ route('home') }}" method="GET" class="d-flex gap-2">
+                <input 
+                    type="text" 
+                    name="search" 
+                    value="{{ request('search') }}" 
+                    placeholder="Search articles..." 
+                    class="form-control form-control-sm"
+                >
+                <button type="submit" class="btn btn-dark btn-sm">Search</button>
+            </form>
+        </div>
 
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
@@ -33,7 +50,9 @@
                 <!-- Author & Date Header -->
                 <div class="card-header bg-white border-bottom-0 d-flex justify-content-between text-muted small pt-3 px-3 pb-2">
                     <span>By {{ $item->author->name ?? $item->author_name ?? 'Admin' }}</span>
-                    <span>{{ $item->created_at ? $item->created_at->format('M d, Y') : 'Recent' }}</span>
+                    <div class="d-flex align-items-center gap-3">
+                        <span>{{ $item->created_at ? $item->created_at->format('M d, Y') : 'Recent' }}</span>
+                    </div>
                 </div>
 
                 <!-- Media Container -->
@@ -437,11 +456,111 @@
         @endforelse
     </div>
 
-    <!-- Pagination Links -->
-    @if(method_exists($posts, 'links'))
-        <div class="d-flex justify-content-center mt-4">
-            {{ $posts->links('pagination::bootstrap-5') }}
+        <!-- Pagination Links -->
+        @if(method_exists($posts, 'links'))
+            <div class="d-flex justify-content-center mt-4">
+                {{ $posts->links('pagination::bootstrap-5') }}
+            </div>
+        @endif
+    </div>
+
+    <!-- Right Column: Trending Posts (Pure image + title, suspenseful, no view counts) -->
+    <div class="col-12 col-lg-3 col-xl-3" style="max-width: 360px;">
+        <div class="sidebar-reactive-scroll" style="position: sticky; top: 76px; max-height: calc(100vh - 90px); overflow-y: auto; overscroll-behavior: contain;">
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-3 pb-2 border-bottom bg-light pt-1" style="position: sticky; top: 0; z-index: 5;">
+                <h5 class="fw-bold mb-0">
+                    🔥 Trending
+                </h5>
+            </div>
+
+            <!-- Small Boxed Posts (Only Image & Title) -->
+            <div class="d-flex flex-column gap-3">
+                @forelse($trendingPosts ?? [] as $trending)
+                    <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 8px;">
+                        <!-- Image or Video (Original ratio, full display without zooming/cropping) -->
+                        @if($trending->media_path && $trending->media_type === 'image')
+                            <a href="{{ route('posts.show', $trending->slug ?? $trending->id) }}" class="d-block text-center bg-light overflow-hidden">
+                                <img 
+                                    src="{{ asset('storage/' . $trending->media_path) }}" 
+                                    class="img-fluid w-100" 
+                                    alt="{{ $trending->title }}" 
+                                    style="max-height: 220px; object-fit: contain; background-color: #f8f9fa;"
+                                >
+                            </a>
+                        @elseif($trending->media_path && $trending->media_type === 'video')
+                            <div class="w-100 bg-dark text-center">
+                                <video 
+                                    controls 
+                                    preload="metadata" 
+                                    class="w-100" 
+                                    style="max-height: 220px; object-fit: contain; background-color: #000;"
+                                >
+                                    <source src="{{ asset('storage/' . $trending->media_path) }}">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                        @endif
+
+                        <!-- Title Only -->
+                        <div class="card-body p-3">
+                            <h6 class="card-title fw-bold mb-0">
+                                <a href="{{ route('posts.show', $trending->slug ?? $trending->id) }}" class="text-dark text-decoration-none" style="font-size: 0.95rem; line-height: 1.35;">
+                                    {{ $trending->title }}
+                                </a>
+                            </h6>
+                        </div>
+                    </div>
+                @empty
+                    <div class="card border-0 shadow-sm p-3 text-center text-muted small">
+                        No trending articles yet.
+                    </div>
+                @endforelse
+            </div>
         </div>
-    @endif
+    </div>
 </div>
+
+<style>
+    /* Independent reactive scrollbars */
+    .sidebar-reactive-scroll {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+        padding-right: 4px;
+        scroll-behavior: smooth;
+    }
+    .sidebar-reactive-scroll::-webkit-scrollbar {
+        width: 5px;
+    }
+    .sidebar-reactive-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .sidebar-reactive-scroll::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.3);
+        border-radius: 10px;
+    }
+    .sidebar-reactive-scroll:hover::-webkit-scrollbar-thumb {
+        background: rgba(100, 116, 139, 0.6);
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Enhance independent scroll behavior when cursor is inside sidebars
+        const sidebars = document.querySelectorAll('.sidebar-reactive-scroll');
+        sidebars.forEach(sidebar => {
+            sidebar.addEventListener('wheel', function (e) {
+                const canScroll = sidebar.scrollHeight > sidebar.clientHeight;
+                if (canScroll) {
+                    const atTop = sidebar.scrollTop === 0 && e.deltaY < 0;
+                    const atBottom = Math.ceil(sidebar.scrollTop + sidebar.clientHeight) >= sidebar.scrollHeight && e.deltaY > 0;
+                    // Keep scroll trapped inside this sidebar unless already at extreme edge
+                    if (!atTop && !atBottom) {
+                        e.stopPropagation();
+                    }
+                }
+            }, { passive: true });
+        });
+    });
+</script>
 @endsection

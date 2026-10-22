@@ -11,7 +11,7 @@
 <body class="bg-light d-flex flex-column min-vh-100">
 
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm sticky-top">
         <div class="container">
             <a class="navbar-brand fw-bold" href="{{ route('home') }}">DevBlog</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
@@ -23,6 +23,13 @@
                         <a class="nav-link" href="{{ route('home') }}">Home</a>
                     </li>
                     @auth
+                        <li class="nav-item">
+                            <a class="nav-link text-white d-flex align-items-center gap-1" href="{{ route('user.dashboard') }}">
+                                <i class="bi bi-person-circle"></i>
+                                <span>{{ Auth::user()->name }}</span>
+                            </a>
+                        </li>
+
                         {{-- Only show Dashboard if user is Admin --}}
                         @if(Auth::user()->isAdmin())
                             <li class="nav-item">
@@ -50,7 +57,7 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="container my-5 flex-grow-1">
+    <main class="container-fluid px-3 px-md-4 px-xl-5 my-4 flex-grow-1">
         @if (session('status'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 {{ session('status') }}

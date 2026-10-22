@@ -53,6 +53,14 @@ class AuthController extends Controller
             return redirect()->intended(route('home'))->with('status', 'Welcome back!');
         }
 
+        // Check if account was deactivated
+        $trashedUser = User::onlyTrashed()->where('email', $credentials['email'])->first();
+        if ($trashedUser && Hash::check($credentials['password'], $trashedUser->password)) {
+            return back()->withErrors([
+                'email' => 'This account has been deactivated. Please contact support to reactivate your account.',
+            ])->onlyInput('email');
+        }
+
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
         ])->onlyInput('email');

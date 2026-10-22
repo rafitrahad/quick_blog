@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\UserController;
 
 // 1. Public Feed & Show Post
 Route::get('/', [PostController::class, 'index'])->name('home');
@@ -29,11 +30,20 @@ Route::middleware('auth')->group(function () {
     Route::put('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
     Route::post('/comments/{comment}/hide', [CommentController::class, 'hide'])->name('comments.hide');
+
+    // User Dashboard & Profile Management
+    Route::get('/dashboard', [UserController::class, 'dashboard'])->name('user.dashboard');
+    Route::put('/dashboard/profile', [UserController::class, 'updateProfile'])->name('user.profile.update');
+    Route::put('/dashboard/password', [UserController::class, 'updatePassword'])->name('user.password.update');
+    Route::delete('/dashboard/deactivate', [UserController::class, 'deactivate'])->name('user.deactivate');
 });
 
 // 4. Admin Only
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::put('/posts/{id}/restore', [AdminController::class, 'restore'])->name('posts.restore');
+    Route::delete('/posts/{id}/force-delete', [AdminController::class, 'forceDelete'])->name('posts.forceDelete');
+    Route::delete('/posts/empty-trash', [AdminController::class, 'emptyTrash'])->name('posts.emptyTrash');
     Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');
     Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
     Route::get('/posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');

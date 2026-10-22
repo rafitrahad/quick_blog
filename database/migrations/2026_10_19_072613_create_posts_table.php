@@ -16,13 +16,14 @@ return new class extends Migration
             $table->string('slug')->unique();
             $table->text('description');
             $table->longText('content');
-            $table->text('quote')->nullable(); // <--- Ensure this line is present
+            $table->text('quote')->nullable();
             $table->string('category')->default('General');
             $table->json('tags')->nullable();
             $table->string('media_path')->nullable();
             $table->enum('media_type', ['image', 'video', 'none'])->default('none');
             $table->enum('status', ['draft', 'published'])->default('draft');
             $table->timestamp('published_at')->nullable();
+            $table->unsignedBigInteger('views')->default(0); // View count
             $table->timestamps();
             $table->softDeletes();
         });
